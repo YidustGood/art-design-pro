@@ -9,7 +9,8 @@ export const ServiceNames = {
   AUTH: 'easy-cloud-auth',
   USER: 'easy-cloud-user',
   SYSTEM: 'easy-cloud-system',
-  CONTENT: 'easy-cloud-content'
+  CONTENT: 'easy-cloud-content',
+  JSPLUGIN: 'easy-cloud-js-plugin'
 } as const
 
 /**
@@ -80,6 +81,17 @@ export const SystemApi = {
   ROLE_LIST: getApiPath(ServiceNames.SYSTEM, '/role/list'),
   // 权限
   PERMISSION_LIST: getApiPath(ServiceNames.SYSTEM, '/permission/list')
+}
+
+// JS插件管理API
+export const JSPluginApi = {
+  GET_PLUGIN_LIST: getApiPath(ServiceNames.JSPLUGIN, '/api/jsplugin/getPluginList'), // 获取插件列表
+  GET_PLUGIN_CONFIG: getApiPath(ServiceNames.JSPLUGIN, '/api/jsplugin/getPluginConfig'), // 获取插件配置，将更改为使用路径参数
+  ENABLE_PLUGIN: getApiPath(ServiceNames.JSPLUGIN, '/api/jsplugin/enablePlugin'), // 启用插件，使用路径参数
+  DISABLE_PLUGIN: getApiPath(ServiceNames.JSPLUGIN, '/api/jsplugin/disablePlugin'), // 禁用插件，使用路径参数
+  HOT_RELOAD_PLUGIN: getApiPath(ServiceNames.JSPLUGIN, '/api/jsplugin/hotReloadPlugin'), // 热重载插件，使用路径参数
+  RELOAD_PLUGINS: getApiPath(ServiceNames.JSPLUGIN, '/api/jsplugin/reloadPlugins'), // 重新加载所有插件
+  UPLOAD_PLUGIN: getApiPath(ServiceNames.JSPLUGIN, '/api/jsplugin/uploadPlugin') // 上传插件
 }
 
 /**

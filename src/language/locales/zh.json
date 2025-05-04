@@ -284,6 +284,10 @@
       "analysis": "分析页",
       "ecommerce": "电子商务"
     },
+    "jsplugin": {
+      "title": "JS插件管理",
+      "management": "插件管理"
+    },
     "widgets": {
       "title": "组件中心",
       "iconList": "Icon 图标",

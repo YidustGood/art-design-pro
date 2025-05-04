@@ -299,6 +299,10 @@
       "analysis": "Analysis",
       "ecommerce": "Ecommerce"
     },
+    "jsplugin": {
+      "title": "JS Plugin Management",
+      "management": "Plugin Management"
+    },
     "widgets": {
       "title": "Components",
       "iconList": "Icon List",

@@ -58,6 +58,29 @@ export const asyncRoutes: MenuListType[] = [
     ]
   },
   {
+    id: 2,
+    path: '/jsplugin',
+    name: 'JSPlugin',
+    component: RoutesAlias.Home,
+    meta: {
+      title: 'menus.jsplugin.title',
+      icon: '&#xe6f7;',
+      keepAlive: false
+    },
+    children: [
+      {
+        id: 201,
+        path: 'management',
+        name: 'JSPluginManagement',
+        component: RoutesAlias.JSPluginManagement,
+        meta: {
+          title: 'menus.jsplugin.management',
+          keepAlive: true
+        }
+      }
+    ]
+  },
+  {
     id: 5,
     path: '/widgets',
     name: 'Widgets',

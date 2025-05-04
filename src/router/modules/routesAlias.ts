@@ -12,6 +12,7 @@ export enum RoutesAlias {
   Dashboard = '/dashboard/console', // 工作台
   Analysis = '/dashboard/analysis', // 分析页
   Ecommerce = '/dashboard/ecommerce', // 电子商务
+  JSPluginManagement = '/jsplugin/management/index', // JS插件管理
   IconList = '/widgets/IconList', // 图标列表
   IconSelector = '/widgets/IconSelector', // 图标选择器
   ImageCrop = '/widgets/ImageCrop', // 图片裁剪
