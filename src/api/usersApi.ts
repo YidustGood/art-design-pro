@@ -5,8 +5,13 @@ import { BaseResult } from '@/types/axios'
 import { UserInfo } from '@/types/store'
 import avatar from '@imgs/user/avatar.png'
 import api from '@/utils/http'
-import { adaptLoginResponse, adaptUserInfoResponse } from './adapter/authAdapter'
+import {
+  adaptLoginResponse,
+  adaptUserInfoResponse,
+  adaptRefreshTokenResponse
+} from './adapter/authAdapter'
 import { AuthApi } from './config/apiConfig'
+import { useUserStore } from '@/store/modules/user'
 
 export class UserService {
   // 用户登录接口
@@ -104,7 +109,7 @@ export class UserService {
     }
   }
 
-  // 退出登录
+  // 用户退出
   static async logout(): Promise<BaseResult<void>> {
     // 开发环境使用模拟数据
     if (import.meta.env.MODE === 'development' && AppConfig.useMock) {
@@ -117,10 +122,25 @@ export class UserService {
       })
     }
 
+    const userStore = useUserStore()
+
+    // 检查是否有有效的accessToken，如果没有则不发送请求
+    if (!userStore.accessToken) {
+      console.warn('登出时没有有效的accessToken，跳过API请求')
+      return {
+        code: 200,
+        message: '退出登录成功',
+        data: undefined
+      }
+    }
+
     // 生产环境调用真实接口
     try {
       const response = await api.post<BaseResult>({
-        url: AuthApi.LOGOUT
+        url: AuthApi.LOGOUT,
+        params: {
+          refreshToken: userStore.refreshToken
+        }
       })
 
       return {
@@ -277,6 +297,46 @@ export class UserService {
         code: 500,
         message: '修改密码失败，请检查网络连接',
         data: false
+      }
+    }
+  }
+
+  // 刷新令牌
+  static async refreshToken(
+    refreshToken: string,
+    deviceType?: string,
+    deviceId?: string
+  ): Promise<BaseResult<string>> {
+    // 开发环境使用模拟数据
+    if (import.meta.env.MODE === 'development' && AppConfig.useMock) {
+      return new Promise((resolve) => {
+        resolve({
+          code: 200,
+          message: '刷新令牌成功',
+          data: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6IkpvaG4gU25vdyIsImlhdCI6MTcwNjg2NTYwMCwiZXhwIjoxNzA2OTUyMDAwfQ.8f9D4kJ2m3XlH5Q0y6Z1r2Y3n4X5pL6q8K9v2W3n4X5'
+        })
+      })
+    }
+
+    // 生产环境调用真实接口
+    try {
+      const response = await api.post<BaseResult>({
+        url: AuthApi.REFRESH_TOKEN,
+        data: {
+          refreshToken,
+          deviceType,
+          deviceId
+        }
+      })
+
+      // 使用适配器处理响应
+      return adaptRefreshTokenResponse(response)
+    } catch (error) {
+      console.error('刷新令牌失败', error)
+      return {
+        code: 500,
+        message: '刷新令牌失败，请检查网络连接',
+        data: null as any
       }
     }
   }

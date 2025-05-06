@@ -36,7 +36,23 @@
 
   // 获取用户信息
   const getUserInfo = async () => {
-    if (userStore.isLogin) {
+    // 检查refreshToken是否已经多次失败
+    if (userStore.refreshToken && userStore.checkRefreshTokenFailure()) {
+      return
+    }
+
+    // 如果已登录但没有accessToken，先尝试刷新token
+    if (userStore.isLogin && !userStore.accessToken && userStore.refreshToken) {
+      // 等待刷新令牌
+      const refreshSuccess = await userStore.refreshAccessToken()
+      if (!refreshSuccess) {
+        // 如果刷新失败，则不再尝试获取用户信息
+        return
+      }
+    }
+
+    // 只有在有accessToken的情况下才获取用户信息
+    if (userStore.isLogin && userStore.accessToken) {
       const userRes = await UserService.getUserInfo()
       if (userRes.code === ApiStatus.success) {
         userStore.setUserInfo(userRes.data)

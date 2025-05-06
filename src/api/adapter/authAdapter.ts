@@ -19,6 +19,7 @@ export function adaptLoginResponse(response: any): BaseResult {
       message: response.message || '登录成功',
       data: {
         accessToken: response.data.accessToken || response.data.token,
+        refreshToken: response.data.refreshToken,
         userInfo: response.data.userInfo
       }
     }
@@ -29,6 +30,29 @@ export function adaptLoginResponse(response: any): BaseResult {
     code: response.code || 401,
     message: response.message || '用户名或密码错误',
     data: null
+  }
+}
+
+/**
+ * 将后端刷新令牌响应转换为前端格式
+ * @param response 后端响应
+ * @returns 转换后的响应，包含新的访问令牌
+ */
+export function adaptRefreshTokenResponse(response: any): BaseResult<string> {
+  // 检查响应格式是否符合预期
+  if (response.code === 200 && response.data) {
+    return {
+      code: 200,
+      message: response.message || '刷新令牌成功',
+      data: response.data // 新的访问令牌
+    }
+  }
+
+  // 如果刷新令牌失败，返回错误信息
+  return {
+    code: response.code || 401,
+    message: response.message || '刷新令牌失败',
+    data: null as any
   }
 }
 

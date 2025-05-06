@@ -172,16 +172,25 @@
         const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
 
         try {
+          // 获取设备信息
+          const userAgent = navigator.userAgent
+          const deviceType = /mobile|tablet|ipad|android/i.test(userAgent) ? 'Mobile' : 'PC'
+          const browserInfo =
+            userAgent.match(/(chrome|safari|firefox|opera|msie|trident(?=\/))\/?\s*(\d+)/i) || []
+          const deviceId = `${browserInfo[1] || 'Unknown'}_${browserInfo[2] || '0'}`
+
           const res = await UserService.login({
             body: JSON.stringify({
               username: formData.username,
-              password: formData.password
+              password: formData.password,
+              deviceType,
+              deviceId
             })
           })
 
           if (res.code === ApiStatus.success && res.data) {
             // 设置 token
-            userStore.setToken(res.data.accessToken)
+            userStore.setToken(res.data.accessToken, res.data.refreshToken)
 
             // 获取用户信息
             const userRes = await UserService.getUserInfo()

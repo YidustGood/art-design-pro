@@ -45,6 +45,8 @@ export const AuthApi = {
   // 登录认证
   LOGIN: getApiPath(ServiceNames.AUTH, '/auth/login'),
   LOGOUT: getApiPath(ServiceNames.AUTH, '/auth/logout'),
+  // 刷新令牌
+  REFRESH_TOKEN: getApiPath(ServiceNames.AUTH, '/auth/refreshToken'),
   // 用户信息
   USER_INFO: getApiPath(ServiceNames.AUTH, '/auth/user/info'),
   UPDATE_USER_INFO: getApiPath(ServiceNames.AUTH, '/auth/user/update'),

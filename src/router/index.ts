@@ -153,8 +153,52 @@ router.beforeEach(async (to, from, next) => {
   // 设置登录注册页面主题
   setSystemTheme(to)
 
-  // 检查登录状态，如果未登录则跳转到登录页
+  // 获取用户存储
   const userStore = useUserStore()
+
+  // 如果有refreshToken但没有accessToken，先尝试刷新token
+  // 排除登录页、注册页和无需登录的页面
+  if (
+    !userStore.accessToken &&
+    userStore.refreshToken &&
+    to.path !== '/login' &&
+    to.path !== '/register' &&
+    !to.meta.noLogin
+  ) {
+    // 检查refreshToken是否已连续失败多次
+    if (userStore.checkRefreshTokenFailure()) {
+      return next('/login')
+    }
+
+    try {
+      const refreshSuccess = await userStore.refreshAccessToken()
+      if (refreshSuccess) {
+        userStore.isLogin = true
+      } else {
+        // 刷新失败，清除本地状态，避免再次尝试无效的刷新
+        // 直接清理，不调用logOut，避免循环
+        sessionStorage.removeItem('accessToken')
+        localStorage.removeItem(`sys-v${import.meta.env.VITE_VERSION || '1.0.0'}`)
+        userStore.isLogin = false
+        userStore.refreshToken = ''
+        userStore.accessToken = ''
+        userStore.info = {}
+        return next('/login')
+      }
+    } catch (error) {
+      console.error('Failed to refresh token:', error)
+      // 同样直接清理状态
+      sessionStorage.removeItem('accessToken')
+      localStorage.removeItem(`sys-v${import.meta.env.VITE_VERSION || '1.0.0'}`)
+      userStore.isLogin = false
+      userStore.refreshToken = ''
+      userStore.accessToken = ''
+      userStore.info = {}
+      return next('/login')
+    }
+  }
+
+  // 检查登录状态，如果未登录则跳转到登录页
   if (!userStore.isLogin && to.path !== '/login' && !to.meta.noLogin) {
     userStore.logOut()
     return next('/login')
