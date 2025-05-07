@@ -733,6 +733,16 @@ export const asyncRoutes: MenuListType[] = [
           title: 'menus.system.log',
           keepAlive: true
         }
+      },
+      {
+        id: 904,
+        path: 'apidoc',
+        name: 'ApiDoc',
+        component: RoutesAlias.ApiDoc,
+        meta: {
+          title: 'menus.system.apidoc',
+          keepAlive: false
+        }
       }
     ]
   },

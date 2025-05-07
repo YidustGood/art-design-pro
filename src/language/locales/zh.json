@@ -357,7 +357,8 @@
       "title": "系统管理",
       "setting": "系统设置",
       "api": "API管理",
-      "log": "系统日志"
+      "log": "系统日志",
+      "apidoc": "API文档"
     },
     "safeguard": {
       "title": "运维管理",

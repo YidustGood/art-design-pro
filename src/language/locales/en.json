@@ -372,7 +372,8 @@
       "title": "System Settings",
       "setting": "Setting",
       "api": "API",
-      "log": "Log"
+      "log": "Log",
+      "apidoc": "API Doc"
     },
     "safeguard": {
       "title": "Safeguard",
