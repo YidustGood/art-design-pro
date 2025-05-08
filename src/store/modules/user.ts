@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { LanguageEnum } from '@/enums/appEnum'
-import { router, setPageTitle } from '@/router'
+import { router, setPageTitle, isRouteRegistered } from '@/router'
 import { UserInfo } from '@/types/store'
 import { useSettingStore } from './setting'
 import { useWorktabStore } from './worktab'
@@ -10,6 +10,7 @@ import { MenuListType } from '@/types/menu'
 import { useTableStore } from './table'
 import { UserService } from '@/api/usersApi'
 import { ElMessage } from 'element-plus'
+import { resetDynamicRoutes } from '@/router/modules/dynamicRoutes'
 
 /**
  * 最大允许的refreshToken失败次数
@@ -336,6 +337,13 @@ export const useUserStore = defineStore('userStore', () => {
       useWorktabStore().opened = []
       saveUserData()
       sessionStorage.removeItem('iframeRoutes')
+
+      // 重置动态路由
+      resetDynamicRoutes(router)
+
+      // 重置路由注册状态
+      isRouteRegistered.value = false
+
       // 只有当前不在登录页时，才跳转到登录页
       if (router.currentRoute.value.path !== '/login') {
         router.push('/login')

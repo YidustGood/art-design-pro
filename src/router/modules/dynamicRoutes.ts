@@ -33,6 +33,45 @@ function registerAsyncRoutes(router: Router, menuList: MenuListType[]): void {
 }
 
 /**
+ * 重置动态路由
+ * 在用户登出时调用，清除所有已注册的动态路由
+ * @param router Vue Router 实例
+ */
+function resetDynamicRoutes(router: Router): void {
+  // 获取所有注册的路由
+  const routes = router.getRoutes()
+
+  // 移除非静态路由
+  routes.forEach((route) => {
+    // 判断是否为动态添加的路由，可以根据路由名称前缀或其他特征来判断
+    if (
+      route.name &&
+      typeof route.name === 'string' &&
+      ![
+        'Login',
+        'Register',
+        'ForgetPassword',
+        'Exception404',
+        'Exception500',
+        'Home',
+        'Dashboard',
+        'Console',
+        'Analysis',
+        'Ecommerce',
+        'Outside',
+        'Iframe',
+        'Pricing'
+      ].includes(route.name)
+    ) {
+      router.removeRoute(route.name)
+    }
+  })
+
+  // 清除iframe路由信息
+  sessionStorage.removeItem('iframeRoutes')
+}
+
+/**
  * 根据组件路径动态加载组件
  * @param componentPath 组件路径（不包含 ../../views 前缀和 .vue 后缀）
  * @param routeName 当前路由名称（用于错误提示）
@@ -126,4 +165,4 @@ function handleNormalRoute(converted: any, component: string | undefined, routeN
   }
 }
 
-export { registerAsyncRoutes, convertRouteComponent, loadComponent }
+export { registerAsyncRoutes, convertRouteComponent, loadComponent, resetDynamicRoutes }
