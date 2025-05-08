@@ -64,6 +64,7 @@
                 <ArtButtonMore
                   :list="[
                     { key: 'permission', label: '菜单权限' },
+                    { key: 'function', label: '功能权限', disabled: true },
                     { key: 'edit', label: '编辑角色' },
                     { key: 'delete', label: '删除角色' }
                   ]"
@@ -106,21 +107,67 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="permissionDialog" title="菜单权限" width="30%">
+    <el-dialog v-model="permissionDialog" title="菜单权限配置" width="40%">
       <div :style="{ maxHeight: '500px', overflowY: 'scroll' }">
+        <el-alert type="info" :closable="false" show-icon style="margin-bottom: 15px">
+          <p>选择角色可访问的菜单项，父节点被选中时子节点会自动全选</p>
+          <p>注意：此处设置的是菜单权限，影响用户可见的菜单项</p>
+        </el-alert>
+
+        <el-input
+          v-model="filterText"
+          placeholder="搜索菜单名称或路径"
+          prefix-icon="Search"
+          clearable
+          style="margin-bottom: 15px"
+        />
+
+        <div v-if="menuTreeLoading" class="tree-loading">
+          <el-skeleton :rows="8" animated />
+        </div>
         <el-tree
+          v-else
           ref="permissionTreeRef"
           :data="menuList"
           show-checkbox
           node-key="id"
           :default-expanded-keys="[1, 2, 3, 4, 5, 6, 7, 8]"
           :props="defaultProps"
-        />
+          :check-strictly="false"
+          :highlight-current="true"
+          :default-checked-keys="defaultCheckedKeys"
+          :filter-node-method="filterNode"
+        >
+          <template #default="{ data }">
+            <span class="custom-tree-node">
+              <span
+                :class="{
+                  'has-children': data.children && data.children.length,
+                  'menu-item': true
+                }"
+              >
+                <el-icon v-if="data.meta?.icon" class="menu-icon">
+                  <span v-if="isUnicodeIcon(data.meta.icon)" v-html="data.meta.icon"></span>
+                  <i v-else :class="data.meta.icon"></i>
+                </el-icon>
+                {{ formatMenuTitle(data.meta?.title) || data.name }}
+              </span>
+              <span class="node-path" v-if="data.path">
+                {{ data.path }}
+              </span>
+            </span>
+          </template>
+        </el-tree>
       </div>
       <template #footer>
         <div class="dialog-footer">
+          <el-button @click="refreshMenuPermissions" type="info">
+            <el-icon><Refresh /></el-icon> 刷新
+          </el-button>
           <el-button @click="permissionDialog = false">取消</el-button>
-          <el-button type="primary" @click="savePermissions">确定</el-button>
+          <el-button type="primary" :loading="savePermLoading" @click="savePermissions"
+            >确定</el-button
+          >
         </div>
       </template>
     </el-dialog>
@@ -139,21 +186,28 @@
     addRole,
     updateRole,
     deleteRole,
-    getRolePermissions,
-    setRolePermissions,
+    getRoleMenuPermissions,
+    setRoleMenuPermissions,
     type RoleType
   } from '@/api/modules/roleApi'
   import { ApiStatus } from '@/utils/http/status'
   import { AuthApi } from '@/api/config/apiConfig'
+  import { menuService } from '@/api/menuApi'
+  import { Refresh } from '@element-plus/icons-vue'
 
   const dialogVisible = ref(false)
   const permissionDialog = ref(false)
-  const { menuList } = storeToRefs(useMenuStore())
+  const menuStore = useMenuStore()
+  const { menuList } = storeToRefs(menuStore)
   const loading = ref(false)
+  const menuTreeLoading = ref(false)
+  const savePermLoading = ref(false)
   const permissionTreeRef = ref()
   const currentRoleId = ref<string>('')
   const tableHeight = ref('500px')
   const emptyText = ref('暂无数据')
+  const defaultCheckedKeys = ref<number[]>([])
+  const filterText = ref('')
 
   const formRef = ref<FormInstance>()
 
@@ -312,10 +366,101 @@
   const buttonMoreClick = async (item: ButtonMoreItem, row: RoleType) => {
     if (item.key === 'permission') {
       await showPermissionDialog(row)
+    } else if (item.key === 'function') {
+      // 暂时禁用功能权限设置
+      ElMessage.info('功能权限设置功能将在下一个版本推出')
     } else if (item.key === 'edit') {
       showDialog('edit', row)
     } else if (item.key === 'delete') {
       confirmDeleteRole(row)
+    }
+  }
+
+  // 刷新菜单树数据
+  const refreshMenuList = async () => {
+    menuTreeLoading.value = true
+    try {
+      // 使用menuService获取菜单列表
+      const { menuList: newMenuList, closeLoading } = await menuService.getMenuList(100)
+
+      // 更新Pinia store中的菜单列表
+      menuStore.setMenuList(newMenuList)
+
+      // 确保关闭loading
+      closeLoading()
+
+      return true
+    } catch (error) {
+      console.error('刷新菜单树失败', error)
+      ElMessage.error('刷新菜单树失败')
+      return false
+    } finally {
+      menuTreeLoading.value = false
+    }
+  }
+
+  // 刷新当前角色的权限树
+  const refreshMenuPermissions = async () => {
+    if (!currentRoleId.value) {
+      ElMessage.warning('角色ID不能为空')
+      return
+    }
+
+    // 刷新菜单列表
+    const menuRefreshSuccess = await refreshMenuList()
+    if (!menuRefreshSuccess) return
+
+    // 重新获取角色菜单权限
+    await loadRoleMenuPermissions(currentRoleId.value)
+
+    // 确保在延迟后设置选中状态
+    setTimeout(() => {
+      if (permissionTreeRef.value && defaultCheckedKeys.value.length > 0) {
+        console.log('强制重新设置选中节点:', defaultCheckedKeys.value)
+        permissionTreeRef.value.setCheckedKeys(defaultCheckedKeys.value)
+      }
+    }, 200)
+  }
+
+  // 加载角色菜单权限
+  const loadRoleMenuPermissions = async (roleId: string) => {
+    menuTreeLoading.value = true
+    try {
+      const res = await getRoleMenuPermissions(roleId)
+      console.log('获取角色菜单权限结果:', res)
+
+      if (res.code === ApiStatus.success) {
+        // 确保权限ID是数字类型
+        let menuIds: number[] = []
+        if (Array.isArray(res.data)) {
+          menuIds = res.data
+            .filter((id) => id !== null && id !== undefined)
+            .map((id) => {
+              // 强制转换为数字
+              const numId = typeof id === 'string' ? parseInt(id, 10) : Number(id)
+              console.log(`转换菜单ID: ${id} => ${numId} (${typeof numId})`)
+              return numId
+            })
+        }
+
+        console.log('处理后的菜单ID数组:', menuIds)
+        defaultCheckedKeys.value = menuIds
+
+        // 延迟一下设置选中状态，确保树渲染完成
+        nextTick(() => {
+          if (permissionTreeRef.value) {
+            console.log('设置树选中状态:', menuIds)
+            permissionTreeRef.value.setCheckedKeys(menuIds)
+          }
+        })
+      } else {
+        ElMessage.warning(res.message || '获取角色菜单权限失败')
+      }
+    } catch (error) {
+      console.error('获取角色菜单权限失败', error)
+      ElMessage.error('获取角色菜单权限失败，请检查网络连接')
+    } finally {
+      menuTreeLoading.value = false
     }
   }
 
@@ -328,20 +473,31 @@
 
     currentRoleId.value = String(row.id)
     permissionDialog.value = true
+    menuTreeLoading.value = true
 
     try {
-      const res = await getRolePermissions(currentRoleId.value)
-      if (res.code === ApiStatus.success && permissionTreeRef.value) {
-        // 设置选中的节点
-        permissionTreeRef.value.setCheckedKeys(res.data || [])
+      // 无论如何，都重新加载菜单列表，确保最新数据
+      const menuRefreshSuccess = await refreshMenuList()
+
+      if (!menuRefreshSuccess) {
+        ElMessage.warning('加载菜单数据失败')
+        menuTreeLoading.value = false
+        return
       }
+
+      // 确保菜单列表加载完成后，再加载角色菜单权限
+      await nextTick()
+
+      // 加载角色菜单权限
+      await loadRoleMenuPermissions(currentRoleId.value)
     } catch (error) {
-      console.error('获取角色权限失败', error)
-      ElMessage.error('获取角色权限失败')
+      console.error('加载权限对话框数据失败', error)
+      ElMessage.error('加载权限对话框数据失败')
+      menuTreeLoading.value = false
     }
   }
 
-  // 保存权限
+  // 保存菜单权限
   const savePermissions = async () => {
     if (!currentRoleId.value) {
       ElMessage.warning('角色ID不能为空')
@@ -349,29 +505,64 @@
     }
 
     if (!permissionTreeRef.value) {
-      ElMessage.warning('权限树未加载')
+      ElMessage.warning('菜单树未加载')
       return
     }
 
-    const checkedKeys = permissionTreeRef.value.getCheckedKeys()
-    const halfCheckedKeys = permissionTreeRef.value.getHalfCheckedKeys()
-    const allKeys = [...checkedKeys, ...halfCheckedKeys]
-
-    console.log('保存权限, 角色ID:', currentRoleId.value, '权限IDs:', allKeys)
+    // 显示加载状态
+    savePermLoading.value = true
 
     try {
-      const res = await setRolePermissions(currentRoleId.value, allKeys)
-      console.log('保存权限结果:', res)
+      // 获取选中和半选中的节点
+      const checkedKeys = permissionTreeRef.value.getCheckedKeys()
+      const halfCheckedKeys = permissionTreeRef.value.getHalfCheckedKeys()
+
+      console.log('选中的节点:', checkedKeys)
+      console.log('半选中的节点:', halfCheckedKeys)
+
+      // 合并所有选中的菜单ID（包括父节点和子节点）
+      const allKeys = [...new Set([...checkedKeys, ...halfCheckedKeys])]
+
+      // 过滤并确保所有ID都是数字类型
+      const requestData = allKeys
+        .filter((id) => id !== null && id !== undefined)
+        .map((id) => Number(id))
+
+      console.log('保存菜单权限, 角色ID:', currentRoleId.value)
+      console.log('发送的菜单IDs (共' + requestData.length + '个):', requestData)
+
+      const res = await setRoleMenuPermissions(currentRoleId.value, requestData)
+      console.log('保存菜单权限结果:', res)
 
       if (res.code === ApiStatus.success) {
-        ElMessage.success('设置权限成功')
+        ElMessage.success('设置菜单权限成功')
         permissionDialog.value = false
+
+        // 询问用户是否需要立即刷新页面以应用新权限
+        ElMessageBox.confirm(
+          '菜单权限设置已保存。若当前用户包含此角色，需要刷新页面才能使新菜单权限生效，是否立即刷新？',
+          '菜单权限已更新',
+          {
+            confirmButtonText: '立即刷新',
+            cancelButtonText: '稍后手动刷新',
+            type: 'info'
+          }
+        )
+          .then(() => {
+            // 用户选择立即刷新
+            window.location.reload()
+          })
+          .catch(() => {
+            // 用户选择稍后刷新，不做任何操作
+          })
       } else {
-        ElMessage.error(res.message || '设置权限失败')
+        ElMessage.error(res.message || '设置菜单权限失败')
       }
     } catch (error) {
-      console.error('设置权限失败', error)
-      ElMessage.error('设置权限失败，请检查网络或服务器状态')
+      console.error('设置菜单权限失败', error)
+      ElMessage.error('设置菜单权限失败，请检查网络或服务器状态')
+    } finally {
+      savePermLoading.value = false
     }
   }
 
@@ -462,12 +653,43 @@
       })
       .replace(/\//g, '-')
   }
+
+  // 过滤树节点
+  const filterNode = (value: string, data: any) => {
+    if (!value) return true
+
+    // 匹配节点的标题或路径
+    const nodeTitle = formatMenuTitle(data.meta?.title) || data.name || ''
+    const nodePath = data.path || ''
+
+    return (
+      nodeTitle.toLowerCase().includes(value.toLowerCase()) ||
+      nodePath.toLowerCase().includes(value.toLowerCase())
+    )
+  }
+
+  watch(filterText, (val) => {
+    if (permissionTreeRef.value) {
+      permissionTreeRef.value.filter(val)
+    }
+  })
+
+  const isUnicodeIcon = (icon: string) => {
+    // 检查是否是Unicode编码格式（&#xe...;）
+    return icon && typeof icon === 'string' && icon.startsWith('&#x')
+  }
 </script>
 
 <style lang="scss" scoped>
   .page-content {
     position: relative;
     height: 100%;
+
+    .tree-loading {
+      padding: 20px;
+      background-color: var(--el-fill-color-lighter);
+      border-radius: 4px;
+    }
 
     .search-row {
       display: flex;
@@ -516,6 +738,50 @@
       overflow: hidden;
       vertical-align: -8px;
       fill: currentcolor;
+    }
+
+    .custom-tree-node {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+
+      .has-children {
+        font-weight: 500;
+      }
+
+      .menu-item {
+        display: flex;
+        align-items: center;
+
+        .menu-icon {
+          width: 16px;
+          height: 16px;
+          margin-right: 5px;
+        }
+      }
+
+      .node-path {
+        margin-left: 8px;
+        font-size: 12px;
+        color: var(--el-text-color-secondary);
+      }
+    }
+  }
+
+  // 修复Unicode图标显示问题
+  :deep(.el-tree-node) {
+    .el-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      // 解决Unicode图标显示问题
+      span[v-html] {
+        font-family: iconfont-sys, sans-serif !important;
+        font-size: 16px;
+        line-height: 1;
+      }
     }
   }
 </style>

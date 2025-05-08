@@ -65,6 +65,7 @@ declare module 'vue' {
     ArtWorkTab: typeof import('./../components/core/layouts/art-work-tab/index.vue')['default']
     CommentItem: typeof import('./../components/custom/comment-widget/widget/CommentItem.vue')['default']
     CommentWidget: typeof import('./../components/custom/comment-widget/index.vue')['default']
+    ElAlert: typeof import('element-plus/es')['ElAlert']
     ElAvatar: typeof import('element-plus/es')['ElAvatar']
     ElButton: typeof import('element-plus/es')['ElButton']
     ElButtonGroup: typeof import('element-plus/es')['ElButtonGroup']

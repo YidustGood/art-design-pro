@@ -13,6 +13,7 @@ export interface RoleType {
   createTime?: string
   updateTime?: string
   permissionIds?: number[]
+  menuIds?: number[]
 }
 
 /**
@@ -101,23 +102,45 @@ export function deleteRole(id: string) {
 }
 
 /**
- * 获取角色权限
+ * 获取角色菜单权限
  * @param roleId 角色ID
- * @returns 权限ID列表
+ * @returns 菜单ID列表
  */
-export function getRolePermissions(roleId: string) {
-  return api.get<BaseResult<number[]>>({ url: `${AuthApi.ROLE_PERMISSIONS}/${roleId}/permissions` })
+export function getRoleMenuPermissions(roleId: string) {
+  return api.get<BaseResult<number[]>>({ url: `${AuthApi.ROLE_GET_MENU_PERMISSIONS}/${roleId}` })
 }
 
 /**
- * 设置角色权限
+ * 设置角色菜单权限
+ * @param roleId 角色ID
+ * @param menuIds 菜单ID列表
+ * @returns 操作结果
+ */
+export function setRoleMenuPermissions(roleId: string, menuIds: number[]) {
+  return api.post<BaseResult<boolean>>({
+    url: `${AuthApi.ROLE_SET_MENU_PERMISSIONS}/${roleId}`,
+    data: menuIds
+  })
+}
+
+/**
+ * 获取角色功能权限
+ * @param roleId 角色ID
+ * @returns 权限ID列表
+ */
+export function getRoleFuncPermissions(roleId: string) {
+  return api.get<BaseResult<number[]>>({ url: `${AuthApi.ROLE_GET_FUNC_PERMISSIONS}/${roleId}` })
+}
+
+/**
+ * 设置角色功能权限
  * @param roleId 角色ID
  * @param permissionIds 权限ID列表
  * @returns 操作结果
  */
-export function setRolePermissions(roleId: string, permissionIds: number[]) {
-  return api.put<BaseResult<boolean>>({
-    url: `${AuthApi.ROLE_PERMISSIONS}/${roleId}/permissions`,
+export function setRoleFuncPermissions(roleId: string, permissionIds: number[]) {
+  return api.post<BaseResult<boolean>>({
+    url: `${AuthApi.ROLE_SET_FUNC_PERMISSIONS}/${roleId}`,
     data: permissionIds
   })
 }

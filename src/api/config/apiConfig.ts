@@ -66,6 +66,10 @@ export const AuthApi = {
   ROLE_UPDATE: getApiPath(ServiceNames.AUTH, '/role'), // PUT，更新角色
   ROLE_DELETE: getApiPath(ServiceNames.AUTH, '/role'), // DELETE /{id}，删除角色
   ROLE_PERMISSIONS: getApiPath(ServiceNames.AUTH, '/role'), // /{roleId}/permissions，角色权限操作
+  ROLE_GET_MENU_PERMISSIONS: getApiPath(ServiceNames.AUTH, '/role/menu'), // 获取角色菜单权限
+  ROLE_SET_MENU_PERMISSIONS: getApiPath(ServiceNames.AUTH, '/role/menu'), // 设置角色菜单权限
+  ROLE_GET_FUNC_PERMISSIONS: getApiPath(ServiceNames.AUTH, '/role/permissions'), // 获取角色功能权限
+  ROLE_SET_FUNC_PERMISSIONS: getApiPath(ServiceNames.AUTH, '/role/permissions'), // 设置角色功能权限
   // 权限
   PERMISSION_LIST: getApiPath(ServiceNames.AUTH, '/permission/list')
 }
