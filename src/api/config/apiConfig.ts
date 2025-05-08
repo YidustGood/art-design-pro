@@ -8,7 +8,6 @@ import { getServiceActualPath } from '@/config/env/api-config'
 export const ServiceNames = {
   AUTH: 'easy-cloud-auth',
   USER: 'easy-cloud-user',
-  SYSTEM: 'easy-cloud-system',
   CONTENT: 'easy-cloud-content',
   JSPLUGIN: 'easy-cloud-js-plugin'
 } as const
@@ -55,7 +54,20 @@ export const AuthApi = {
   CHECK_USERNAME: getApiPath(ServiceNames.AUTH, '/auth/check/username'),
   CHECK_MOBILE: getApiPath(ServiceNames.AUTH, '/auth/check/mobile'),
   // 注册
-  REGISTER: getApiPath(ServiceNames.AUTH, '/auth/register')
+  REGISTER: getApiPath(ServiceNames.AUTH, '/auth/register'),
+  // 菜单
+  MENU_LIST: getApiPath(ServiceNames.AUTH, '/menu/list'),
+  MENU_TREE: getApiPath(ServiceNames.AUTH, '/menu/tree'),
+  // 角色
+  ROLE_LIST: getApiPath(ServiceNames.AUTH, '/role/list'),
+  ROLE_PAGE: getApiPath(ServiceNames.AUTH, '/role/page'),
+  ROLE_DETAIL: getApiPath(ServiceNames.AUTH, '/role'), // GET /{id}，获取角色详情
+  ROLE_ADD: getApiPath(ServiceNames.AUTH, '/role'), // POST，新增角色
+  ROLE_UPDATE: getApiPath(ServiceNames.AUTH, '/role'), // PUT，更新角色
+  ROLE_DELETE: getApiPath(ServiceNames.AUTH, '/role'), // DELETE /{id}，删除角色
+  ROLE_PERMISSIONS: getApiPath(ServiceNames.AUTH, '/role'), // /{roleId}/permissions，角色权限操作
+  // 权限
+  PERMISSION_LIST: getApiPath(ServiceNames.AUTH, '/permission/list')
 }
 
 /**
@@ -70,19 +82,6 @@ export const UserApi = {
   UPDATE: getApiPath(ServiceNames.USER, '/user/update'),
   // 删除用户
   DELETE: getApiPath(ServiceNames.USER, '/user/delete')
-}
-
-/**
- * 系统管理相关API
- */
-export const SystemApi = {
-  // 菜单
-  MENU_LIST: getApiPath(ServiceNames.SYSTEM, '/menu/list'),
-  MENU_TREE: getApiPath(ServiceNames.SYSTEM, '/menu/tree'),
-  // 角色
-  ROLE_LIST: getApiPath(ServiceNames.SYSTEM, '/role/list'),
-  // 权限
-  PERMISSION_LIST: getApiPath(ServiceNames.SYSTEM, '/permission/list')
 }
 
 // JS插件管理API
