@@ -2,7 +2,7 @@ import { MenuThemeEnum, SystemThemeEnum } from '@/enums/appEnum'
 
 // 用户信息
 export interface UserInfo {
-  id: number
+  id: string
   name: string
   username: string
   avatar: string

@@ -76,7 +76,7 @@ export class UserService {
           code: 200,
           message: '获取用户信息成功',
           data: {
-            id: 1,
+            id: '1',
             name: '张三',
             username: 'John Snow',
             avatar: avatar,
@@ -238,7 +238,7 @@ export class UserService {
           message: '更新用户信息成功',
           data: {
             ...userInfo,
-            id: userInfo.id || 1
+            id: userInfo.id || '1'
           } as UserInfo
         })
       })

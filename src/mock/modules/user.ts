@@ -2,7 +2,7 @@ import avatar from '@imgs/user/avatar.png'
 
 // 用户信息（示例数据）
 export const userInfo = {
-  id: 1,
+  id: '1',
   name: '张三',
   username: 'John Snow',
   avatar: avatar,

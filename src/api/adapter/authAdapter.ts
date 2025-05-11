@@ -70,7 +70,7 @@ export function adaptUserInfoResponse(response: any): BaseResult<UserInfo> {
       code: 200,
       message: response.message || '获取用户信息成功',
       data: {
-        id: userData.id || 1,
+        id: userData.id || '1',
         name: userData.name || userData.nickname || '未命名用户',
         username: userData.username || '',
         avatar: userData.avatar || defaultAvatar,
